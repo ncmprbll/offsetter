@@ -1,3 +1,7 @@
+# Original project
+
+Original project can be found [here](https://github.com/farvend/offsetter).
+
 # offsetter
 
 A lightweight Rust macro for defining structs with explicit field offsets and automatic padding generation.
