@@ -13,7 +13,7 @@ This is not my original idea and I didn't come up with the name. All credit goes
 ```rust
 use offsetter::offset;
 
-// #1
+// Example #1
 
 offset!(
     pub struct Entity {
@@ -25,7 +25,7 @@ offset!(
     }
 );
 
-// #2
+// Example #2
 
 offset!(
     struct Clip {
@@ -44,7 +44,7 @@ offset!(
         0xF8 health: i32,
         0xFC armor: i32,
         0x225 name: [u8; 16],
-        0x374 current_weapon: &'a mut Weapon<'a>,
+        0x374 current_weapon: &'a mut Weapon<'a>, // Be mindful of pointer size on 32 bit and 64 bit architectures
     }
 );
 ```

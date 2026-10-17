@@ -39,17 +39,17 @@ macro_rules! offset {
 
     // &'a mut T
     (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt mut $ty)});
+        $crate::offset!(@guard ($offset + core::mem::size_of::<&$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt mut $ty)});
     };
 
     // &'a T
     (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt $ty)});
+        $crate::offset!(@guard ($offset + core::mem::size_of::<&$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt $ty)});
     };
 
     // &mut T
     (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & mut $ty)});
+        $crate::offset!(@guard ($offset + core::mem::size_of::<&$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & mut $ty)});
     };
 
     // Fallback accumulative matcher
