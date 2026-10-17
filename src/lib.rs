@@ -3,9 +3,6 @@ pub use paste;
 /// Creates a `#[repr(C, packed)]` struct with automatic padding between
 /// fields based on specified byte offsets.
 ///
-/// Also generates a `Debug` impl that safely reads potentially unaligned
-/// fields via `core::ptr::read_unaligned`.
-///
 /// # Examples
 ///
 /// ```
@@ -37,7 +34,7 @@ pub use paste;
 macro_rules! offset {
     (@guard ($current_offset:expr,) -> {$(#[$attr:meta])* $vis:vis struct $name:ident $(<$($lt:lifetime),*>)? $(($offset:expr, $amount:expr, $fvis:vis $id:ident: $ty:ty))*}) => {
         $crate::paste::paste! {
-            #[repr(C)]
+            #[repr(C, packed)]
             $(#[$attr])*
             $vis struct $name $(<$($lt),*>)? {
                 $(

@@ -1,3 +1,5 @@
+use std::ptr::{addr_of, read_unaligned};
+
 use offsetter::offset;
 
 offset!(
@@ -43,12 +45,14 @@ fn test_game_player_transmute() {
 
     let player: GamePlayer = unsafe { std::ptr::read(buf.as_ptr() as *const GamePlayer) };
 
-    assert_eq!(player.id, 42);
-    assert_eq!(player.health, 75.5);
-    assert_eq!(player.max_health, 100.0);
-    assert_eq!(player.position, [1.0, 2.0, 3.0]);
-    assert_eq!(player.team_id, 7);
-    assert_eq!(player.flags, 0xDEADBEEF);
+    unsafe {
+        assert_eq!(read_unaligned(addr_of!(player.id)), 42);
+        assert_eq!(read_unaligned(addr_of!(player.health)), 75.5);
+        assert_eq!(read_unaligned(addr_of!(player.max_health)), 100.0);
+        assert_eq!(read_unaligned(addr_of!(player.position)), [1.0, 2.0, 3.0]);
+        assert_eq!(read_unaligned(addr_of!(player.team_id)), 7);
+        assert_eq!(read_unaligned(addr_of!(player.flags)), 0xDEADBEEF);
+    }
 }
 
 #[test]
@@ -62,7 +66,9 @@ fn test_simple_transmute() {
 
     let s: Simple = unsafe { std::ptr::read(buf.as_ptr() as *const Simple) };
 
-    assert_eq!(s.a, 0xFF);
-    assert_eq!(s.b, 0x12345678);
-    assert_eq!(s.c, 0xABCD);
+    unsafe {
+        assert_eq!(read_unaligned(addr_of!(s.a)), 0xFF);
+        assert_eq!(read_unaligned(addr_of!(s.b)), 0x12345678);
+        assert_eq!(read_unaligned(addr_of!(s.c)), 0xABCD);
+    }
 }

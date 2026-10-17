@@ -26,20 +26,6 @@ offset!(
 
 This expands into a `#[repr(C)]` struct with hidden `_padN: [u8; ...]` fields between your fields, ensuring each field sits at the exact byte offset you specified.
 
-## Alignment checking
-
-Offsets are validated at compile time. Misaligned offsets produce a clear error:
-
-```rust
-// compile error: "field `b` at offset 0x5 violates alignment of type `u32`"
-offset!(
-    struct Bad {
-        0x0 a: u8,
-        0x5 b: u32,
-    }
-);
-```
-
 ## Syntax
 
 ```rust
@@ -54,7 +40,7 @@ offset!(
 
 - `offset` — hex or decimal byte offset (e.g. `0x10`, `16`)
 - Field visibility is optional — fields are always generated as `pub`
-- The struct is always `#[repr(C)]`
+- The struct is always `#[repr(C, packed)]`
 
 ## Example
 
