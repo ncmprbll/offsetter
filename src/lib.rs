@@ -35,28 +35,29 @@ pub use paste;
 /// ```
 #[macro_export]
 macro_rules! offset {
-    (@guard ($current_offset:expr,) -> {$(#[$attr:meta])* $vis:vis struct $name:ident $(($offset:expr, $amount:expr, $fvis:vis $id:ident: $ty:ty))*}) => {
+    (@guard ($current_offset:expr,) -> {$(#[$attr:meta])* $vis:vis struct $name:ident $(<$($lt:lifetime),*>)? $(($offset:expr, $amount:expr, $fvis:vis $id:ident: $ty:ty))*}) => {
         $crate::paste::paste! {
             #[repr(C)]
             $(#[$attr])*
-            $vis struct $name {
+            $vis struct $name $(<$($lt),*>)? {
                 $(
                     [<_pad $id>]: [u8; $amount],
                     $fvis $id: $ty
                 ),*
             }
         }
+    };
 
-        $(
-            const _: () = assert!(
-                $offset % core::mem::align_of::<$ty>() == 0,
-                concat!(
-                    "field `", stringify!($id), "` at offset ",
-                    stringify!($offset),
-                    " violates alignment of type `", stringify!($ty), "`"
-                )
-            );
-        )*
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt mut $ty)});
+    };
+
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt $ty)});
+    };
+
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & mut $ty)});
     };
 
     (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
@@ -67,7 +68,7 @@ macro_rules! offset {
         $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(),) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: $ty)});
     };
 
-    ($(#[$attr:meta])* $vis:vis struct $name:ident { $($input:tt)* }) => {
-        $crate::offset!(@guard (0, $($input)*) -> {$(#[$attr])* $vis struct $name});
+    ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($lt:lifetime),*>)? { $($input:tt)* }) => {
+        $crate::offset!(@guard (0, $($input)*) -> {$(#[$attr])* $vis struct $name $(<$($lt),*>)?});
     };
 }
