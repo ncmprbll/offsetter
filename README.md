@@ -13,6 +13,8 @@ This is not my original idea and I didn't come up with the name. All credit goes
 ```rust
 use offsetter::offset;
 
+// #1
+
 offset!(
     pub struct Entity {
         0x0  id: u32,
@@ -22,9 +24,32 @@ offset!(
         0x20 team_id: u32,
     }
 );
+
+// #2
+
+offset!(
+    struct Clip {
+        0x00 ammo: i32
+    }
+);
+
+offset!(
+    struct Weapon<'a> {
+        0x14 clip: &'a mut Clip
+    }
+);
+
+offset!(
+    struct Player<'a> {
+        0xF8 health: i32,
+        0xFC armor: i32,
+        0x225 name: [u8; 16],
+        0x374 current_weapon: &'a mut Weapon<'a>,
+    }
+);
 ```
 
-This expands into a `#[repr(C)]` struct with hidden `_padN: [u8; ...]` fields between your fields, ensuring each field sits at the exact byte offset you specified.
+This expands into a `#[repr(C, packed)]` struct with hidden `_padN: [u8; ...]` fields between your fields, ensuring each field sits at the exact byte offset you specified.
 
 ## Syntax
 

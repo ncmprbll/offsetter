@@ -32,6 +32,37 @@ pub use paste;
 /// ```
 #[macro_export]
 macro_rules! offset {
+    // Entrypoint
+    ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($lt:lifetime),*>)? { $($input:tt)* }) => {
+        $crate::offset!(@guard (0, $($input)*) -> {$(#[$attr])* $vis struct $name $(<$($lt),*>)?});
+    };
+
+    // &'a mut T
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt mut $ty)});
+    };
+
+    // &'a T
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt $ty)});
+    };
+
+    // &mut T
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & mut $ty)});
+    };
+
+    // Fallback accumulative matcher
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: $ty)});
+    };
+
+    // Fallback last element matcher
+    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: $ty:ty) -> {$($output:tt)*}) => {
+        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(),) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: $ty)});
+    };
+
+    // Termination
     (@guard ($current_offset:expr,) -> {$(#[$attr:meta])* $vis:vis struct $name:ident $(<$($lt:lifetime),*>)? $(($offset:expr, $amount:expr, $fvis:vis $id:ident: $ty:ty))*}) => {
         $crate::paste::paste! {
             #[repr(C, packed)]
@@ -43,29 +74,5 @@ macro_rules! offset {
                 ),*
             }
         }
-    };
-
-    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt mut $ty)});
-    };
-
-    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & $lt:lifetime $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & $lt $ty)});
-    };
-
-    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: & mut $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: & mut $ty)});
-    };
-
-    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: $ty:ty, $($next:tt)*) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(), $($next)*) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: $ty)});
-    };
-
-    (@guard ($current_offset:expr, $offset:literal $fvis:vis $id:ident: $ty:ty) -> {$($output:tt)*}) => {
-        $crate::offset!(@guard ($offset + core::mem::size_of::<$ty>(),) -> {$($output)* ($offset, $offset - ($current_offset), $fvis $id: $ty)});
-    };
-
-    ($(#[$attr:meta])* $vis:vis struct $name:ident $(<$($lt:lifetime),*>)? { $($input:tt)* }) => {
-        $crate::offset!(@guard (0, $($input)*) -> {$(#[$attr])* $vis struct $name $(<$($lt),*>)?});
     };
 }
